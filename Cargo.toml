@@ -13,8 +13,7 @@ edition = "2018"
 [dependencies]
 embedded-hal = "0.2"
 bitflags = "1.2"
-crc_all = "0.2"
-lazy_static = { version = "1.4", features = ["spin_no_std"] }
+crc = "3.0.0"
 
 [dev_dependencies]
 linux-embedded-hal = "0.3"
