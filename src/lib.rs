@@ -106,11 +106,9 @@ where
     /// Creates a new AHT20 device from an I2C peripheral and a Delay.
     pub fn new(i2c: I2C, delay: D) -> Result<Self, Error<E>> {
         let mut dev = Self {
-            i2c: i2c,
-            delay: delay,
+            i2c,
+            delay,
         };
-
-        dev.reset()?;
 
         dev.calibrate()?;
 
@@ -129,6 +127,8 @@ where
     pub fn calibrate(&mut self) -> Result<(), Error<E>> {
         // Send calibrate command
         self.i2c.write(I2C_ADDRESS, &[0xE1, 0x08, 0x00])?;
+
+        self.delay.delay_ms(10);
 
         // Wait until not busy
         while self.status()?.contains(StatusFlags::BUSY) {
@@ -161,6 +161,7 @@ where
 
         // Send trigger measurement command
         self.i2c.write(I2C_ADDRESS, &[0xAC, 0x33, 0x00])?;
+        self.delay.delay_ms(80);
 
         // Wait until not busy
         while self.status()?.contains(StatusFlags::BUSY) {
