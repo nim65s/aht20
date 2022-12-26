@@ -105,10 +105,7 @@ where
 {
     /// Creates a new AHT20 device from an I2C peripheral and a Delay.
     pub fn new(i2c: I2C, delay: D) -> Result<Self, Error<E>> {
-        let mut dev = Self {
-            i2c,
-            delay,
-        };
+        let mut dev = Self { i2c, delay };
 
         dev.calibrate()?;
 
