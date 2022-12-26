@@ -118,6 +118,10 @@ where
         Ok(dev)
     }
 
+    fn delay_ms(&mut self, delay: u16) {
+        self.delay.delay_ms(delay);
+    }
+
     /// Gets the sensor status.
     fn status(&mut self) -> Result<StatusFlags, E> {
         let buf = &mut [0u8; 1];
@@ -133,11 +137,11 @@ where
         // Send calibrate command
         self.i2c.write(I2C_ADDRESS, &[0xE1, 0x08, 0x00])?;
 
-        self.delay.delay_ms(10);
+        self.delay_ms(10);
 
         // Wait until not busy
         while self.status()?.contains(StatusFlags::BUSY) {
-            self.delay.delay_ms(10);
+            self.delay_ms(10);
         }
 
         // Confirm sensor is calibrated
@@ -156,7 +160,7 @@ where
         self.i2c.write(I2C_ADDRESS, &[0xBA])?;
 
         // Wait 20ms as stated in specification
-        self.delay.delay_ms(20);
+        self.delay_ms(20);
 
         Ok(())
     }
@@ -170,11 +174,11 @@ where
 
         // Send trigger measurement command
         self.i2c.write(I2C_ADDRESS, &[0xAC, 0x33, 0x00])?;
-        self.delay.delay_ms(80);
+        self.delay_ms(80);
 
         // Wait until not busy
         while self.status()?.contains(StatusFlags::BUSY) {
-            self.delay.delay_ms(10);
+            self.delay_ms(10);
         }
 
         // Read in sensor data
