@@ -14,6 +14,10 @@ edition = "2018"
 embedded-hal = "0.2"
 bitflags = "1.2"
 crc = "3.0.0"
+linux-embedded-hal = {version = "0.3", optional = true}
+cfg-if = "1.0.0"
 
-[dev_dependencies]
-linux-embedded-hal = "0.3"
+[features]
+default = []
+delay = []
+linux = ["dep:linux-embedded-hal"]

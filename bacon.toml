@@ -6,20 +6,20 @@ default_job = "check"
 [jobs]
 
 [jobs.check]
-command = ["cargo", "check", "--color", "always"]
+command = ["cargo", "check", "--all-features", "--color", "always"]
 need_stdout = false
 
 [jobs.check-all]
-command = ["cargo", "check", "--all-targets", "--color", "always"]
+command = ["cargo", "check", "--all-features", "--all-targets", "--color", "always"]
 need_stdout = false
 watch = ["tests", "benches", "examples"]
 
 [jobs.clippy]
-command = ["cargo", "clippy", "--color", "always", "--", "-W", "clippy::pedantic", "-W", "clippy::nursery", "-W", "clippy::unwrap_used", "-W", "clippy::expect_used"]
+command = ["cargo", "clippy", "--all-features", "--color", "always", "--", "-W", "clippy::pedantic", "-W", "clippy::nursery", "-W", "clippy::unwrap_used", "-W", "clippy::expect_used"]
 need_stdout = false
 
 [jobs.clippy-all]
-command = ["cargo", "clippy", "--all-targets", "--color", "always", "--", "-W", "clippy::pedantic", "-W", "clippy::nursery", "-W", "clippy::unwrap_used", "-W", "clippy::expect_used"]
+command = ["cargo", "clippy", "--all-features", "--all-targets", "--color", "always", "--", "-W", "clippy::pedantic", "-W", "clippy::nursery", "-W", "clippy::unwrap_used", "-W", "clippy::expect_used"]
 need_stdout = false
 watch = ["tests", "benches", "examples"]
 

@@ -1,5 +1,6 @@
 //! Linux I2C Demo
 
+#[cfg(delay)]
 use {
     aht20::Aht20,
     embedded_hal::blocking::delay::DelayMs,
@@ -7,6 +8,7 @@ use {
     std::{env, process},
 };
 
+#[cfg(delay)]
 fn main() {
     let args: Vec<String> = env::args().collect();
     if args.len() != 2 {
@@ -36,4 +38,9 @@ fn main() {
 
         hal::Delay.delay_ms(1000u16);
     }
+}
+
+#[cfg(not(delay))]
+fn main() {
+    eprintln!("this example requires the 'delay' feature.");
 }

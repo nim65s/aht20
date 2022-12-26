@@ -8,13 +8,12 @@
 #![deny(missing_docs)]
 #![no_std]
 
+use cfg_if::cfg_if;
+
 use {
     bitflags::bitflags,
     crc::{Algorithm, Crc},
-    embedded_hal::blocking::{
-        delay::DelayMs,
-        i2c::{Write, WriteRead},
-    },
+    embedded_hal::blocking::i2c::{Write, WriteRead},
 };
 
 const I2C_ADDRESS: u8 = 0x38;
@@ -96,30 +95,24 @@ impl Temperature {
     }
 }
 
-/// AHT20 driver.
-pub struct Aht20<I2C, D> {
+/// AHT20 driver without delay.
+pub struct Aht20NoDelay<I2C> {
     i2c: I2C,
-    delay: D,
 }
 
-impl<I2C, D, E> Aht20<I2C, D>
+impl<I2C, E> Aht20NoDelay<I2C>
 where
     I2C: WriteRead<Error = E> + Write<Error = E>,
-    D: DelayMs<u16>,
 {
-    /// Creates a new AHT20 device from an I2C peripheral and a Delay.
+    /// Creates a new AHT20 device from an I2C peripheral.
     /// # Errors
     /// will return `Err` in case of i2c and/or calibration issue
-    pub fn new(i2c: I2C, delay: D) -> Result<Self, Error<E>> {
-        let mut dev = Self { i2c, delay };
+    pub fn new(i2c: I2C) -> Result<Self, Error<E>> {
+        let mut dev = Self { i2c };
 
-        dev.calibrate()?;
+        dev.start_calibration()?;
 
         Ok(dev)
-    }
-
-    fn delay_ms(&mut self, delay: u16) {
-        self.delay.delay_ms(delay);
     }
 
     /// Gets the sensor status.
@@ -133,18 +126,23 @@ where
     /// Self-calibrate the sensor.
     /// # Errors
     /// will return `Err` in case of i2c and/or calibration issue
-    pub fn calibrate(&mut self) -> Result<(), Error<E>> {
+    pub fn start_calibration(&mut self) -> Result<(), Error<E>> {
         // Send calibrate command
         self.i2c.write(I2C_ADDRESS, &[0xE1, 0x08, 0x00])?;
+        Ok(())
+    }
 
-        self.delay_ms(10);
+    /// Check if the device is still busy
+    /// # Errors
+    /// will return `Err` in case of i2c issue
+    pub fn busy(&mut self) -> Result<bool, Error<E>> {
+        Ok(self.status()?.contains(StatusFlags::BUSY))
+    }
 
-        // Wait until not busy
-        while self.status()?.contains(StatusFlags::BUSY) {
-            self.delay_ms(10);
-        }
-
-        // Confirm sensor is calibrated
+    /// Confirm sensor is calibrated
+    /// # Errors
+    /// will return `Err` in case of i2c issue
+    pub fn calibrated(&mut self) -> Result<(), Error<E>> {
         if !self.status()?.contains(StatusFlags::CALIBRATION_ENABLE) {
             return Err(Error::Uncalibrated);
         }
@@ -155,31 +153,27 @@ where
     /// Soft resets the sensor.
     /// # Errors
     /// will return `Err` in case of i2c issue
-    pub fn reset(&mut self) -> Result<(), E> {
+    pub fn start_reset(&mut self) -> Result<(), E> {
         // Send soft reset command
         self.i2c.write(I2C_ADDRESS, &[0xBA])?;
-
-        // Wait 20ms as stated in specification
-        self.delay_ms(20);
-
         Ok(())
     }
 
-    /// Reads humidity and temperature.
+    /// Start reading humidity and temperature.
     /// # Errors
-    /// will return `Err` in case of i2c and/or calibration issue
-    pub fn read(&mut self) -> Result<(Humidity, Temperature), Error<E>> {
-        let crc = Crc::<u8>::new(&CRC_ALGO);
-        let mut digest = crc.digest();
-
+    /// will return `Err` in case of i2c issue
+    pub fn start_read(&mut self) -> Result<(), Error<E>> {
         // Send trigger measurement command
         self.i2c.write(I2C_ADDRESS, &[0xAC, 0x33, 0x00])?;
-        self.delay_ms(80);
+        Ok(())
+    }
 
-        // Wait until not busy
-        while self.status()?.contains(StatusFlags::BUSY) {
-            self.delay_ms(10);
-        }
+    /// Conclude reading humidity and temperature.
+    /// # Errors
+    /// will return `Err` in case of i2c and/or calibration issue
+    pub fn end_read(&mut self) -> Result<(Humidity, Temperature), Error<E>> {
+        let crc = Crc::<u8>::new(&CRC_ALGO);
+        let mut digest = crc.digest();
 
         // Read in sensor data
         let buf = &mut [0u8; 7];
@@ -198,9 +192,108 @@ where
         }
 
         // Extract humitidy and temperature values from data
-        let hum = (u32::from(buf[1]) << 12) | (u32::from(buf[2]) << 4) | (u32::from(buf[3]) >> 4);
-        let tmp = ((u32::from(buf[3]) & 0x0f) << 16) | (u32::from(buf[4]) << 8) | u32::from(buf[5]);
+        let buf: [u32; 7] = [
+            u32::from(buf[0]),
+            u32::from(buf[1]),
+            u32::from(buf[2]),
+            u32::from(buf[3]),
+            u32::from(buf[4]),
+            u32::from(buf[5]),
+            u32::from(buf[6]),
+        ];
+        let hum = (buf[1] << 12) | (buf[2] << 4) | (buf[3] >> 4);
+        let temp = ((buf[3] & 0x0f) << 16) | (buf[4] << 8) | buf[5];
 
-        Ok((Humidity { h: hum }, Temperature { t: tmp }))
+        Ok((Humidity { h: hum }, Temperature { t: temp }))
+    }
+}
+
+#[cfg(delay)]
+use embedded_hal::blocking::delay::DelayMs;
+
+#[cfg(delay)]
+/// AHT20 driver.
+pub struct Aht20<I2C, D> {
+    aht20: Aht20NoDelay<I2C>,
+    delay: D,
+}
+
+cfg_if! {
+    if #[cfg(delay)] {
+        impl<I2C, D, E> Aht20<I2C, D>
+            where
+                I2C: WriteRead<Error = E> + Write<Error = E>,
+                D: DelayMs<u16>,
+        {
+            /// Creates a new AHT20 device from an I2C peripheral and a Delay.
+            /// # Errors
+            /// will return `Err` in case of i2c and/or calibration issue
+            pub fn new(i2c: I2C, delay: D) -> Result<Self, Error<E>> {
+                let mut dev = Self { Aht20NoDelay {i2c}, delay };
+
+                dev.calibrate()?;
+
+                Ok(dev)
+            }
+
+            fn delay_ms(&mut self, delay: u16) {
+                self.delay.delay_ms(delay);
+            }
+
+            /// Gets the sensor status.
+            fn status(&mut self) -> Result<StatusFlags, E> {
+                let buf = &mut [0u8; 1];
+                self.i2c.write_read(I2C_ADDRESS, &[0u8], buf)?;
+
+                Ok(StatusFlags { bits: buf[0] })
+            }
+
+            /// Self-calibrate the sensor.
+            /// # Errors
+            /// will return `Err` in case of i2c and/or calibration issue
+            pub fn calibrate(&mut self) -> Result<(), Error<E>> {
+                // Send calibrate command
+                self.aht20.start_calibration()?;
+
+                self.delay_ms(10);
+
+                // Wait until not busy
+                while self.aht20.busy()? {
+                    self.delay_ms(10);
+                }
+
+                self.aht20.calibrated()
+            }
+
+            /// Soft resets the sensor.
+            /// # Errors
+            /// will return `Err` in case of i2c issue
+            pub fn reset(&mut self) -> Result<(), E> {
+                // Send soft reset command
+                self.aht20.start_reset()?;
+
+                // Wait 20ms as stated in specification
+                self.delay_ms(20);
+
+                Ok(())
+            }
+
+            /// Reads humidity and temperature.
+            /// # Errors
+            /// will return `Err` in case of i2c and/or calibration issue
+            pub fn read(&mut self) -> Result<(Humidity, Temperature), Error<E>> {
+                // Send trigger measurement command
+                self.aht20.start_read()?;
+                self.delay_ms(80);
+
+                // Wait until not busy
+                while self.aht20.busy()? {
+                    self.delay_ms(10);
+                }
+
+                // Read in sensor data
+                self.aht20.end_read()
+            }
+        }
     }
 }
