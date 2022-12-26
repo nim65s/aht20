@@ -15,11 +15,11 @@ need_stdout = false
 watch = ["tests", "benches", "examples"]
 
 [jobs.clippy]
-command = ["cargo", "clippy", "--color", "always"]
+command = ["cargo", "clippy", "--color", "always", "--", "-W", "clippy::pedantic", "-W", "clippy::nursery", "-W", "clippy::unwrap_used", "-W", "clippy::expect_used"]
 need_stdout = false
 
 [jobs.clippy-all]
-command = ["cargo", "clippy", "--all-targets", "--color", "always"]
+command = ["cargo", "clippy", "--all-targets", "--color", "always", "--", "-W", "clippy::pedantic", "-W", "clippy::nursery", "-W", "clippy::unwrap_used", "-W", "clippy::expect_used"]
 need_stdout = false
 watch = ["tests", "benches", "examples"]
 
@@ -56,6 +56,7 @@ allow_warnings = true
 a = "job:check-all"
 i = "job:initial"
 c = "job:clippy"
+k = "job:clippy-all"
 d = "job:doc-open"
 t = "job:test"
 r = "job:run"
