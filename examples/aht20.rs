@@ -1,7 +1,7 @@
 //! Linux I2C Demo
 
 use {
-    aht20::*,
+    aht20::Aht20,
     embedded_hal::blocking::delay::DelayMs,
     linux_embedded_hal as hal,
     std::{env, process},
@@ -14,18 +14,25 @@ fn main() {
         process::exit(1);
     }
 
-    let i2c = hal::I2cdev::new(&args[1]).unwrap();
+    let Ok(i2c) = hal::I2cdev::new(&args[1]) else {
+        eprintln!("Couldn't open I2C device");
+        return;
+    };
 
-    let mut dev = Aht20::new(i2c, hal::Delay).unwrap();
+    let Ok(mut dev) = Aht20::new(i2c, hal::Delay) else {
+        eprintln!("Couldn't contact aht20");
+        return;
+    };
 
     loop {
-        let (h, t) = dev.read().unwrap();
-
-        println!(
-            "relative humidity={0}%; temperature={1}C",
-            h.rh(),
-            t.celsius()
-        );
+        match dev.read() {
+            Ok((h, t)) => println!(
+                "relative humidity={0}%; temperature={1}C",
+                h.rh(),
+                t.celsius()
+            ),
+            Err(e) => eprintln!("error reading aht20: {e:?}"),
+        }
 
         hal::Delay.delay_ms(1000u16);
     }

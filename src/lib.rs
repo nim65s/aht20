@@ -20,7 +20,7 @@ use {
 const I2C_ADDRESS: u8 = 0x38;
 const CRC_ALGO: Algorithm<u8> = Algorithm {
     width: 16,
-    poly: 0b110001,
+    poly: 0b11_0001,
     init: 0xFF,
     refin: false,
     refout: false,
@@ -54,7 +54,7 @@ pub enum Error<E> {
 
 impl<E> core::convert::From<E> for Error<E> {
     fn from(e: E) -> Self {
-        Error::Bus(e)
+        Self::Bus(e)
     }
 }
 
@@ -65,12 +65,14 @@ pub struct Humidity {
 
 impl Humidity {
     /// Humidity converted to Relative Humidity %.
-    pub fn rh(&self) -> f32 {
-        100.0 * (self.h as f32) / ((1 << 20) as f32)
+    #[must_use]
+    pub fn rh(&self) -> f64 {
+        100.0 * f64::from(self.h) / f64::from(1 << 20)
     }
 
     /// Raw humidity reading.
-    pub fn raw(&self) -> u32 {
+    #[must_use]
+    pub const fn raw(&self) -> u32 {
         self.h
     }
 }
@@ -82,12 +84,14 @@ pub struct Temperature {
 
 impl Temperature {
     /// Temperature converted to Celsius.
-    pub fn celsius(&self) -> f32 {
-        (200.0 * (self.t as f32) / ((1 << 20) as f32)) - 50.0
+    #[must_use]
+    pub fn celsius(&self) -> f64 {
+        200.0 * f64::from(self.t) / f64::from(1 << 20) - 50.0
     }
 
     /// Raw temperature reading.
-    pub fn raw(&self) -> u32 {
+    #[must_use]
+    pub const fn raw(&self) -> u32 {
         self.t
     }
 }
@@ -104,6 +108,8 @@ where
     D: DelayMs<u16>,
 {
     /// Creates a new AHT20 device from an I2C peripheral and a Delay.
+    /// # Errors
+    /// will return `Err` in case of i2c and/or calibration issue
     pub fn new(i2c: I2C, delay: D) -> Result<Self, Error<E>> {
         let mut dev = Self { i2c, delay };
 
@@ -121,6 +127,8 @@ where
     }
 
     /// Self-calibrate the sensor.
+    /// # Errors
+    /// will return `Err` in case of i2c and/or calibration issue
     pub fn calibrate(&mut self) -> Result<(), Error<E>> {
         // Send calibrate command
         self.i2c.write(I2C_ADDRESS, &[0xE1, 0x08, 0x00])?;
@@ -141,6 +149,8 @@ where
     }
 
     /// Soft resets the sensor.
+    /// # Errors
+    /// will return `Err` in case of i2c issue
     pub fn reset(&mut self) -> Result<(), E> {
         // Send soft reset command
         self.i2c.write(I2C_ADDRESS, &[0xBA])?;
@@ -152,6 +162,8 @@ where
     }
 
     /// Reads humidity and temperature.
+    /// # Errors
+    /// will return `Err` in case of i2c and/or calibration issue
     pub fn read(&mut self) -> Result<(Humidity, Temperature), Error<E>> {
         let crc = Crc::<u8>::new(&CRC_ALGO);
         let mut digest = crc.digest();
@@ -182,9 +194,9 @@ where
         }
 
         // Extract humitidy and temperature values from data
-        let hum = ((buf[1] as u32) << 12) | ((buf[2] as u32) << 4) | ((buf[3] as u32) >> 4);
-        let temp = (((buf[3] as u32) & 0x0f) << 16) | ((buf[4] as u32) << 8) | (buf[5] as u32);
+        let hum = (u32::from(buf[1]) << 12) | (u32::from(buf[2]) << 4) | (u32::from(buf[3]) >> 4);
+        let tmp = ((u32::from(buf[3]) & 0x0f) << 16) | (u32::from(buf[4]) << 8) | u32::from(buf[5]);
 
-        Ok((Humidity { h: hum }, Temperature { t: temp }))
+        Ok((Humidity { h: hum }, Temperature { t: tmp }))
     }
 }
