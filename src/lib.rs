@@ -208,10 +208,10 @@ where
     }
 }
 
-#[cfg(delay)]
+#[cfg(feature = "delay")]
 use embedded_hal::blocking::delay::DelayMs;
 
-#[cfg(delay)]
+#[cfg(feature = "delay")]
 /// AHT20 driver.
 pub struct Aht20<I2C, D> {
     aht20: Aht20NoDelay<I2C>,
@@ -219,7 +219,7 @@ pub struct Aht20<I2C, D> {
 }
 
 cfg_if! {
-    if #[cfg(delay)] {
+    if #[cfg(feature = "delay")] {
         impl<I2C, D, E> Aht20<I2C, D>
             where
                 I2C: WriteRead<Error = E> + Write<Error = E>,

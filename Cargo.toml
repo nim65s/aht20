@@ -18,6 +18,6 @@ linux-embedded-hal = {version = "0.3", optional = true}
 cfg-if = "1.0.0"
 
 [features]
-default = []
+default = ["delay"]
 delay = []
 linux = ["dep:linux-embedded-hal"]
