@@ -229,7 +229,8 @@ cfg_if! {
             /// # Errors
             /// will return `Err` in case of i2c and/or calibration issue
             pub fn new(i2c: I2C, delay: D) -> Result<Self, Error<E>> {
-                let mut dev = Self { Aht20NoDelay {i2c}, delay };
+                let aht20 = Aht20NoDelay {i2c};
+                let mut dev = Self { aht20, delay };
 
                 dev.calibrate()?;
 
@@ -238,14 +239,6 @@ cfg_if! {
 
             fn delay_ms(&mut self, delay: u16) {
                 self.delay.delay_ms(delay);
-            }
-
-            /// Gets the sensor status.
-            fn status(&mut self) -> Result<StatusFlags, E> {
-                let buf = &mut [0u8; 1];
-                self.i2c.write_read(I2C_ADDRESS, &[0u8], buf)?;
-
-                Ok(StatusFlags { bits: buf[0] })
             }
 
             /// Self-calibrate the sensor.
