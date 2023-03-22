@@ -120,7 +120,7 @@ where
         let buf = &mut [0u8; 1];
         self.i2c.write_read(I2C_ADDRESS, &[0u8], buf)?;
 
-        Ok(StatusFlags { bits: buf[0] })
+        Ok(StatusFlags::from_bits_truncate(buf[0]))
     }
 
     /// Self-calibrate the sensor.
@@ -186,7 +186,7 @@ where
         };
 
         // Check calibration
-        let status = StatusFlags { bits: buf[0] };
+        let status = StatusFlags::from_bits_truncate(buf[0]);
         if !status.contains(StatusFlags::CALIBRATION_ENABLE) {
             return Err(Error::Uncalibrated);
         }
