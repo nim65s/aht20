@@ -8,10 +8,12 @@
 #![deny(missing_docs)]
 #![no_std]
 
+#[cfg(nightly)]
+use embassy_time::{Duration, Timer};
+
 use {
     bitflags::bitflags,
     crc::{Algorithm, Crc},
-    embassy_time::{Duration, Timer},
     embedded_hal::blocking::i2c::{Write, WriteRead},
     postcard::experimental::max_size::MaxSize,
     serde::{Deserialize, Serialize},
@@ -289,10 +291,12 @@ where
 }
 
 /// Async AHT20 driver.
+#[cfg(nightly)]
 pub struct Aht20Async<I2C> {
     aht20: Aht20NoDelay<I2C>,
 }
 
+#[cfg(nightly)]
 impl<I2C, E> Aht20Async<I2C>
 where
     I2C: WriteRead<Error = E> + Write<Error = E>,
