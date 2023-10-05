@@ -12,6 +12,8 @@ use {
     bitflags::bitflags,
     crc::{Algorithm, Crc},
     embedded_hal::blocking::i2c::{Write, WriteRead},
+    postcard::experimental::max_size::MaxSize,
+    serde::{Deserialize, Serialize},
 };
 
 const I2C_ADDRESS: u8 = 0x38;
@@ -56,6 +58,7 @@ impl<E> core::convert::From<E> for Error<E> {
 }
 
 /// Humidity reading from AHT20.
+#[derive(Deserialize, Serialize, MaxSize, Debug, Eq, PartialEq, Copy, Clone)]
 pub struct Humidity {
     h: u32,
 }
@@ -75,6 +78,7 @@ impl Humidity {
 }
 
 /// Temperature reading from AHT20.
+#[derive(Deserialize, Serialize, MaxSize, Debug, Eq, PartialEq, Copy, Clone)]
 pub struct Temperature {
     t: u32,
 }
