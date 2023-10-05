@@ -11,6 +11,7 @@
 use {
     bitflags::bitflags,
     crc::{Algorithm, Crc},
+    embassy_time::{Duration, Timer},
     embedded_hal::blocking::i2c::{Write, WriteRead},
     postcard::experimental::max_size::MaxSize,
     serde::{Deserialize, Serialize},
@@ -280,6 +281,79 @@ where
         // Wait until not busy
         while self.aht20.busy()? {
             self.delay_ms(10);
+        }
+
+        // Read in sensor data
+        self.aht20.end_read()
+    }
+}
+
+/// Async AHT20 driver.
+pub struct Aht20Async<I2C> {
+    aht20: Aht20NoDelay<I2C>,
+}
+
+impl<I2C, E> Aht20Async<I2C>
+where
+    I2C: WriteRead<Error = E> + Write<Error = E>,
+{
+    /// Creates a new AHT20 device from an I2C peripheral and a Delay.
+    /// # Errors
+    /// will return `Err` in case of i2c and/or calibration issue
+    pub async fn new(i2c: I2C) -> Result<Self, Error<E>> {
+        let aht20 = Aht20NoDelay { i2c };
+        let mut dev = Self { aht20 };
+
+        dev.calibrate().await?;
+
+        Ok(dev)
+    }
+
+    async fn delay_ms(&mut self, delay: u64) {
+        Timer::after(Duration::from_millis(delay)).await;
+    }
+
+    /// Self-calibrate the sensor.
+    /// # Errors
+    /// will return `Err` in case of i2c and/or calibration issue
+    pub async fn calibrate(&mut self) -> Result<(), Error<E>> {
+        // Send calibrate command
+        self.aht20.start_calibration()?;
+
+        self.delay_ms(10).await;
+
+        // Wait until not busy
+        while self.aht20.busy()? {
+            self.delay_ms(10).await;
+        }
+
+        self.aht20.calibrated()
+    }
+
+    /// Soft resets the sensor.
+    /// # Errors
+    /// will return `Err` in case of i2c issue
+    pub async fn reset(&mut self) -> Result<(), E> {
+        // Send soft reset command
+        self.aht20.start_reset()?;
+
+        // Wait 20ms as stated in specification
+        self.delay_ms(20).await;
+
+        Ok(())
+    }
+
+    /// Reads humidity and temperature.
+    /// # Errors
+    /// will return `Err` in case of i2c and/or calibration issue
+    pub async fn read(&mut self) -> Result<(Humidity, Temperature), Error<E>> {
+        // Send trigger measurement command
+        self.aht20.start_read()?;
+        self.delay_ms(80).await;
+
+        // Wait until not busy
+        while self.aht20.busy()? {
+            self.delay_ms(10).await;
         }
 
         // Read in sensor data
