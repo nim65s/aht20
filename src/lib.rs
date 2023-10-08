@@ -1,6 +1,8 @@
-//! A platform agnostic driver to interface with the AHT20 temperature and humidity sensor.
+//! A platform agnostic driver to interface with the AHT20 temperature and
+//! humidity sensor.
 //!
-//! This driver was built using [`embedded-hal`] traits and is a fork of Anthony Romano's [AHT10 crate].
+//! This driver was built using [`embedded-hal`] traits and is a fork of Anthony
+//! Romano's [AHT10 crate].
 //!
 //! [`embedded-hal`]: https://docs.rs/embedded-hal/~0.2
 //! [AHT10 crate]: https://github.com/heyitsanthony/aht10
@@ -8,17 +10,15 @@
 #![deny(missing_docs)]
 #![no_std]
 
-use {
-    bitflags::bitflags,
-    crc::{Algorithm, Crc},
-    embedded_hal::blocking::i2c::{Write, WriteRead},
-    postcard::experimental::max_size::MaxSize,
-    serde::{Deserialize, Serialize},
-};
+use bitflags::bitflags;
+use crc::{Algorithm, Crc};
+use embedded_hal::blocking::i2c::{Write, WriteRead};
+use postcard::experimental::max_size::MaxSize;
+use serde::{Deserialize, Serialize};
 
 const I2C_ADDRESS: u8 = 0x38;
 const CRC_ALGO: Algorithm<u8> = Algorithm {
-    width: 16,
+    width: 8,
     poly: 0b11_0001,
     init: 0xFF,
     refin: false,

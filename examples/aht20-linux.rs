@@ -1,11 +1,10 @@
 //! Linux I2C Demo
 
-use {
-    aht20::Aht20,
-    embedded_hal::blocking::delay::DelayMs,
-    linux_embedded_hal as hal,
-    std::{env, process},
-};
+use std::{env, process};
+
+use aht20::Aht20;
+use embedded_hal::blocking::delay::DelayMs;
+use linux_embedded_hal as hal;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
