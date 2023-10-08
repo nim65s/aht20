@@ -21,4 +21,3 @@ serde = { version = "1", default-features = false, features = ["derive"] }
 
 [features]
 linux = ["dep:linux-embedded-hal"]
-nightly = []
