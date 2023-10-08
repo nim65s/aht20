@@ -9,6 +9,10 @@
 
 See an example using `linux-embedded-hal` in `examples/aht20-linux.rs`.
 
+## Async
+
+An async version with `embedded-hal-async::i2c::I2c` is available in the `async` branch.
+
 ## License
 
 Licensed under AGPL-3.0.
