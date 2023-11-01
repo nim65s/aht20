@@ -11,9 +11,10 @@ version = "0.1.0"
 edition = "2018"
 
 [dependencies]
-embassy-time = { version = "0.1.3",  features = ["nightly"] }
+embassy-time = { version = "0.1.5", features = ["nightly"] }
 bitflags = "2"
 crc = "3"
 postcard = { version = "1", features = ["postcard-derive", "experimental-derive"] }
 serde = { version = "1", default-features = false, features = ["derive"] }
 embedded-hal-async = { version = "1.0.0-rc.1" }
+thiserror = { version = "1", package = "thiserror-core", default-features = false }

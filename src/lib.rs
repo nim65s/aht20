@@ -10,6 +10,7 @@
 #![deny(missing_docs)]
 #![no_std]
 #![feature(async_fn_in_trait)]
+#![feature(error_in_core)]
 
 use bitflags::bitflags;
 use crc::{Algorithm, Crc};
@@ -43,13 +44,18 @@ bitflags! {
 }
 
 /// AHT20 Error.
-#[derive(Debug, Copy, Clone)]
+#[derive(thiserror::Error, Debug, Copy, Clone)]
 pub enum Error<E> {
     /// Underlying bus error.
+    #[error("bus error: {0:?}")]
     Bus(E),
+
     /// Checksum mismatch.
+    #[error("checksum error")]
     Checksum,
+
     /// Device is not calibrated.
+    #[error("uncalibrated error")]
     Uncalibrated,
 }
 
