@@ -13,32 +13,45 @@ edition = "2018"
 [dependencies]
 bitflags = "2"
 crc = "3"
-thiserror = { version = "1", package = "thiserror-core", default-features = false }
-
-embassy-time = { version = "0.1.5", features = ["nightly", "tick-hz-1_000_000"] }
-embedded-hal-async = { version = "1.0.0-rc.1" }
-
-postcard = { version = "1", optional = true, features = ["postcard-derive", "experimental-derive"] }
-
-serde = { version = "1", optional = true, default-features = false, features = ["derive"] }
-
 defmt = { version = "0.3", optional = true }
-
-embassy-executor = { version = "0.3.1", optional = true, features = ["nightly", "integrated-timers", "arch-riscv32", "executor-thread"] }
-esp-backtrace = { version = "0.9.0", optional = true, features = ["esp32c3", "panic-handler", "print-uart"] }
-esp-hal-common = { version = "0.13.0", optional = true, features = ["esp32c3", "embassy", "embassy-time-timg0", "async"] }
-esp-println = { version = "0.7.0", optional = true, features = ["esp32c3"] }
+embassy-executor = { version = "0.3.1", optional = true, features = ["nightly", "integrated-timers", "executor-thread"] }
+embassy-time = { version = "0.1.5", optional = true, features = ["nightly", "tick-hz-1_000_000"] }
+embedded-hal-async = { version = "1.0.0-rc.1", optional = true }
+esp-backtrace = { version = "0.9.0", optional = true, features = ["panic-handler", "print-uart"] }
+esp-hal-common = { version = "0.13.0", optional = true, features = ["embassy", "embassy-time-timg0", "async"] }
+esp-println = { version = "0.7.0", optional = true }
 esp32c3-hal = { version = "0.13.0", optional = true }
-
+postcard = { version = "1", optional = true, features = ["postcard-derive", "experimental-derive"] }
+serde = { version = "1", optional = true, default-features = false, features = ["derive"] }
+thiserror = { version = "1", package = "thiserror-core", default-features = false }
 
 [features]
 serde = ["dep:serde"]
 postcard = ["dep:postcard"]
 defmt = ["dep:defmt"]
 esp32 = [
-    "dep:embassy-executor",
     "dep:esp-backtrace",
     "dep:esp-hal-common",
     "dep:esp-println",
-    "dep:esp32c3-hal",
 ]
+esp32c3 = [
+    "esp32",
+    "dep:esp32c3-hal",
+    "esp-backtrace/esp32c3",
+    "esp-hal-common/esp32c3",
+    "esp-println/esp32c3",
+]
+async = [
+    "dep:embassy-time",
+    "dep:embedded-hal-async",
+]
+embassy-esp32c3 = [
+    "async",
+    "esp32c3",
+    "dep:embassy-executor",
+    "embassy-executor/arch-riscv32",
+]
+
+[[example]]
+name = "embassy-esp32c3"
+required-features = ["embassy-esp32c3"]

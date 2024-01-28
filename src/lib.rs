@@ -17,5 +17,7 @@ pub use aht20::{Humidity, StatusFlags, Temperature, CRC_ALGO, I2C_ADDRESS};
 mod error;
 pub use error::Error;
 
+#[cfg(feature = "async")]
 mod async_driver;
+#[cfg(feature = "async")]
 pub use async_driver::Aht20Async;

@@ -5,8 +5,8 @@
 
 > An embedded rust `no_std` driver for the AHT20 temperature and humidity sensor, forked from @fmckeogh's [AHT20 crate](https://github.com/fmckeogh/aht20)
 
-## Run embassy esp32 example
+## Run embassy esp32c3 example
 
 ```
-cargo run --example embassy-esp32 --target riscv32imc-unknown-none-elf -F esp32
+cargo run --target riscv32imc-unknown-none-elf --example embassy-esp32c3 -F embassy-esp32c3
 ```
