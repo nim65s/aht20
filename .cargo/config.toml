@@ -3,8 +3,13 @@ runner = "espflash flash --monitor"
 rustflags = [
   "-C", "link-arg=-Tlinkall.x",
   "-C", "force-frame-pointers",
-
 ]
+
+[target.'cfg(all(target_arch = "arm", target_os = "none"))']
+runner = "probe-rs run --chip STM32F103C8"
 
 [unstable]
 build-std = ["core"]
+
+[env]
+DEFMT_LOG = "trace"
