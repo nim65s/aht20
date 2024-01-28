@@ -8,5 +8,5 @@
 ## Run embassy esp32c3 example
 
 ```
-cargo run --target riscv32imc-unknown-none-elf --example embassy-esp32c3 -F embassy-esp32c3
+cargo run --target riscv32imc-unknown-none-elf --example async-esp32c3 -F async-esp32c3
 ```

@@ -26,7 +26,7 @@ async fn main(_spawner: Spawner) {
     let io = IO::new(peripherals.GPIO, peripherals.IO_MUX);
 
     let timer_group0 = esp32c3_hal::timer::TimerGroup::new(peripherals.TIMG0, &clocks);
-    embassy::init(&clocks, timer_group0.timer0);
+    embassy::init(&clocks, timer_group0);
 
     let i2c = I2C::new(
         peripherals.I2C0,
@@ -38,7 +38,9 @@ async fn main(_spawner: Spawner) {
 
     interrupt::enable(Interrupt::I2C_EXT0, interrupt::Priority::Priority1).unwrap();
 
-    let mut aht20 = Aht20Async::new(i2c).await.expect("aht20 device creation error");
+    let mut aht20 = Aht20Async::new(i2c)
+        .await
+        .expect("aht20 device creation error");
 
     loop {
         let (h, t) = aht20.read_ht().await.expect("aht20 device read error");
