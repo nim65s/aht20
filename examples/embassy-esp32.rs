@@ -2,7 +2,7 @@
 #![no_main]
 #![feature(type_alias_impl_trait)]
 
-use aht20::Aht20;
+use aht20::Aht20Async;
 use embassy_executor::Spawner;
 use embassy_time::{Duration, Timer};
 use esp32c3_hal::{
@@ -38,7 +38,7 @@ async fn main(_spawner: Spawner) {
 
     interrupt::enable(Interrupt::I2C_EXT0, interrupt::Priority::Priority1).unwrap();
 
-    let mut aht20 = Aht20::new(i2c).await.expect("aht20 device creation error");
+    let mut aht20 = Aht20Async::new(i2c).await.expect("aht20 device creation error");
 
     loop {
         let (h, t) = aht20.read_ht().await.expect("aht20 device read error");
