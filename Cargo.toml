@@ -23,9 +23,10 @@ defmt-rtt = { version = "0.4", optional = true }
 embassy-executor = { version = "0.5", optional = true, features = ["nightly", "integrated-timers"] }
 embassy-stm32 = { version = "0.1", optional = true, features = [ "unstable-pac", "memory-x", "time-driver-any" ]  }
 embassy-time = { version = "0.3", optional = true, features = ["tick-hz-1_000_000"] }
+embedded-hal = "1"
 embedded-hal-async = { version = "1", optional = true }
 esp-backtrace = { version = "0.10", optional = true, features = ["panic-handler", "print-uart"] }
-esp-hal-common = { version = "0.15", optional = true }
+esp-hal-common = { version = "0.15", optional = true, features = ["eh1"] }
 esp-println = { version = "0.8", optional = true }
 esp32c3-hal = { version = "0.15", optional = true }
 postcard = { version = "1", optional = true, features = ["postcard-derive", "experimental-derive"] }
@@ -46,6 +47,7 @@ defmt = [
     "embassy-stm32/defmt",
     "embassy-time/defmt",
     "embassy-time/defmt-timestamp-uptime",
+    "embedded-hal/defmt-03",
 ]
 postcard = ["dep:postcard"]
 serde = ["dep:serde"]
@@ -85,6 +87,10 @@ async-stm32f1 = [
     "embassy-executor/executor-thread",
     "embassy-stm32/stm32f103c8",
 ]
+
+[[example]]
+name = "esp32c3"
+required-features = ["esp32c3"]
 
 [[example]]
 name = "async-esp32c3"

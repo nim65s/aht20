@@ -30,7 +30,7 @@ async fn main(_spawner: Spawner) {
         Irqs,
         p.DMA1_CH6,
         p.DMA1_CH7,
-        Hertz(100_000),
+        Hertz(10_000),
         Default::default(),
     );
 
@@ -41,7 +41,7 @@ async fn main(_spawner: Spawner) {
     info!("aht20 device created");
 
     loop {
-        let (h, t) = aht20.read_ht().await.expect("aht20 device read error");
+        let (h, t) = aht20.read().await.expect("aht20 device read error");
         info!("read {:?} {:?}", h.rh(), t.celsius());
         Timer::after(Duration::from_secs(10)).await;
     }

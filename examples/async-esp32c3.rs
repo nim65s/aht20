@@ -19,6 +19,7 @@ use esp_println::println;
 
 #[main]
 async fn main(_spawner: Spawner) {
+    println!("Hello");
     let peripherals = Peripherals::take();
     let system = peripherals.SYSTEM.split();
     let clocks = ClockControl::boot_defaults(system.clock_control).freeze();
@@ -32,7 +33,7 @@ async fn main(_spawner: Spawner) {
         peripherals.I2C0,
         io.pins.gpio4,
         io.pins.gpio5,
-        1u32.kHz(),
+        10u32.kHz(),
         &clocks,
     );
 
@@ -43,7 +44,7 @@ async fn main(_spawner: Spawner) {
         .expect("aht20 device creation error");
 
     loop {
-        let (h, t) = aht20.read_ht().await.expect("aht20 device read error");
+        let (h, t) = aht20.read().await.expect("aht20 device read error");
         println!("read {:?} {:?}", h.rh(), t.celsius());
         Timer::after(Duration::from_secs(10)).await;
     }

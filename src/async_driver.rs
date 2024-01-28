@@ -157,7 +157,7 @@ where
     /// Reads humidity and temperature.
     /// # Errors
     /// will return `Err` in case of i2c and/or calibration issue
-    pub async fn read_ht(&mut self) -> Result<(Humidity, Temperature), Error<E>> {
+    pub async fn read(&mut self) -> Result<(Humidity, Temperature), Error<E>> {
         // Send trigger measurement command
         self.start_read().await?;
         self.delay_ms(80).await;
